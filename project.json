@@ -43,13 +43,6 @@
     "fileInfoCollection": [
       {
         "editingStatus": "InProgress",
-        "testCaseId": "46090162-c353-443f-853c-214d862fe258",
-        "testCaseType": "TestCase",
-        "executionTemplateType": "Local",
-        "fileName": "Tests\\GetTransactionDataTestCase.xaml"
-      },
-      {
-        "editingStatus": "InProgress",
         "testCaseId": "79c4fa27-9aa9-44fa-8cf0-9e929b0b9f78",
         "testCaseType": "TestCase",
         "executionTemplateType": "Local",

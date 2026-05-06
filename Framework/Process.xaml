@@ -2,6 +2,9 @@
   <x:Members>
     <x:Property sap2010:Annotation.AnnotationText="Dictionary structure to store configuration data of the process (settings, constants and assets)." Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
     <x:Property sap2010:Annotation.AnnotationText="Output: number of items successfully added to the Orchestrator queue." Name="out_ItemsQueued" Type="OutArgument(x:Int32)" />
+    <x:Property Name="out_ItemsTotal" Type="OutArgument(x:Int32)" />
+    <x:Property Name="out_ItemsSkipped" Type="OutArgument(x:Int32)" />
+    <x:Property Name="out_ItemsFailed" Type="OutArgument(x:Int32)" />
   </x:Members>
   <VisualBasic.Settings>
     <x:Null />
@@ -80,6 +83,9 @@
     <Sequence.Variables>
       <Variable x:TypeArguments="sd:DataTable" Name="dt_SourceData" />
       <Variable x:TypeArguments="x:Int32" Name="int_QueuedCount" Default="[0]" />
+      <Variable x:TypeArguments="x:Int32" Name="int_TotalCount" Default="[0]" />
+      <Variable x:TypeArguments="x:Int32" Name="int_SkippedCount" Default="[0]" />
+      <Variable x:TypeArguments="x:Int32" Name="int_FailedCount" Default="[0]" />
     </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
@@ -98,12 +104,20 @@
       <ui:LogMessage DisplayName="Log Get Source Data" sap:VirtualizedContainerService.HintSize="660,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info" Message="[&quot;[Dispatcher] Retrieving source data from: &quot; + in_Config(&quot;SourceDataPath&quot;).ToString]" />
       <ui:Comment DisplayName="TODO: Implement source data retrieval" sap:VirtualizedContainerService.HintSize="660,56" sap2010:WorkflowViewState.IdRef="Comment_GetSource" Text="Invoke GetSourceData.xaml or add source retrieval activities here. Populate dt_SourceData." />
     </Sequence>
-    <If sap2010:Annotation.AnnotationText="Guard: skip dispatch if no source data was found. Throws BusinessRuleException so the REF marks this transaction as a business exception (skipped), not a failure." Condition="[dt_SourceData Is Nothing OrElse dt_SourceData.Rows.Count = 0]" DisplayName="If no source data found" sap:VirtualizedContainerService.HintSize="700,200" sap2010:WorkflowViewState.IdRef="If_NoData">
+    <Assign DisplayName="Assign total items from source" sap:VirtualizedContainerService.HintSize="700,104.8" sap2010:WorkflowViewState.IdRef="Assign_TotalCount">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">[int_TotalCount]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">[If(dt_SourceData Is Nothing,0,dt_SourceData.Rows.Count)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <If Condition="[int_TotalCount = 0]" DisplayName="If no source data found" sap:VirtualizedContainerService.HintSize="700,176" sap2010:WorkflowViewState.IdRef="If_NoData">
       <If.Then>
-        <Throw DisplayName="Throw - No source data" Exception="[New UiPath.Core.BusinessRuleException(&quot;[Dispatcher] No source data found. Verify the source path and credentials.&quot;)]" sap:VirtualizedContainerService.HintSize="660,113.6" sap2010:WorkflowViewState.IdRef="Throw_NoData" />
+        <ui:LogMessage DisplayName="Log No Source Data" sap:VirtualizedContainerService.HintSize="353.6,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_NoData" Level="Warn" Message="[&quot;[Dispatcher] No source data found. Completing run with zero queue items.&quot;]" />
       </If.Then>
     </If>
-    <ui:ForEachRow sap2010:Annotation.AnnotationText="Iterate over each source row and add it as a queue item to Orchestrator.&#xA;Customise the SpecificContent dictionary to include all fields the Performer needs." ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dt_SourceData]" DisplayName="For Each Source Row - Add Queue Item" sap:VirtualizedContainerService.HintSize="700,500" sap2010:WorkflowViewState.IdRef="ForEachRow_Dispatch">
+    <ui:ForEachRow sap2010:Annotation.AnnotationText="Iterate over each source row and add it as a queue item to Orchestrator.&#xA;Customise the SpecificContent dictionary to include all fields the Performer needs." ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[If(dt_SourceData Is Nothing, New DataTable(), dt_SourceData)]" DisplayName="For Each Source Row - Add Queue Item" sap:VirtualizedContainerService.HintSize="700,500" sap2010:WorkflowViewState.IdRef="ForEachRow_Dispatch">
       <ui:ForEachRow.Body>
         <ActivityAction x:TypeArguments="sd:DataRow">
           <ActivityAction.Argument>
@@ -123,26 +137,52 @@
                 <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[dict_SpecificContent]</OutArgument>
               </Assign.To>
               <Assign.Value>
-                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[New Dictionary(Of String, Object) From {{"RowIndex", SourceRow.Table.Rows.IndexOf(SourceRow).ToString}}]</InArgument>
+                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[New Dictionary(Of String, Object) From {{"schemaVersion","1.0"},{"sourceSystem",If(in_Config.ContainsKey("SourceSystem"),in_Config("SourceSystem").ToString,"UNKNOWN")},{"rowIndex",SourceRow.Table.Rows.IndexOf(SourceRow).ToString},{"businessKey",If(SourceRow.Table.Columns.Contains("BusinessKey"),SourceRow("BusinessKey").ToString,If(SourceRow.Table.Columns.Contains("ID"),SourceRow("ID").ToString,SourceRow.Table.Rows.IndexOf(SourceRow).ToString))},{"correlationId",Guid.NewGuid.ToString("N")}}]</InArgument>
               </Assign.Value>
             </Assign>
             <ui:Comment DisplayName="TODO: Add domain-specific fields to SpecificContent" sap:VirtualizedContainerService.HintSize="620,56" sap2010:WorkflowViewState.IdRef="Comment_Fields" Text="e.g.: dict_SpecificContent(&quot;InvoiceNumber&quot;) = SourceRow(&quot;InvoiceNo&quot;).ToString" />
-            <ui:AddQueueItem ContinueOnError="{x:Null}" DisplayName="Add Queue Item" sap:VirtualizedContainerService.HintSize="620,120" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" QueueName="[in_Config(&quot;OrchestratorQueueName&quot;).ToString]" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" ItemInformation="[dict_SpecificContent]">
-              <ui:AddQueueItem.Deadline>
-                <InArgument x:TypeArguments="s:Nullable(s:DateTime)" />
-              </ui:AddQueueItem.Deadline>
-              <ui:AddQueueItem.PostponeFor>
-                <InArgument x:TypeArguments="s:Nullable(s:DateTime)" />
-              </ui:AddQueueItem.PostponeFor>
-            </ui:AddQueueItem>
-            <Assign DisplayName="Increment queued counter" sap:VirtualizedContainerService.HintSize="620,104.8" sap2010:WorkflowViewState.IdRef="Assign_Counter">
-              <Assign.To>
-                <OutArgument x:TypeArguments="x:Int32">[int_QueuedCount]</OutArgument>
-              </Assign.To>
-              <Assign.Value>
-                <InArgument x:TypeArguments="x:Int32">[int_QueuedCount + 1]</InArgument>
-              </Assign.Value>
-            </Assign>
+            <TryCatch DisplayName="Try enqueue item" sap:VirtualizedContainerService.HintSize="620,278.4" sap2010:WorkflowViewState.IdRef="TryCatch_AddQueue">
+              <TryCatch.Try>
+                <Sequence DisplayName="Try" sap:VirtualizedContainerService.HintSize="449.6,280" sap2010:WorkflowViewState.IdRef="Sequence_TryAddQueue">
+                  <ui:AddQueueItem ContinueOnError="{x:Null}" DisplayName="Add Queue Item" sap:VirtualizedContainerService.HintSize="416,120" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" QueueName="[in_Config(&quot;OrchestratorQueueName&quot;).ToString]" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" ItemInformation="[dict_SpecificContent]">
+                    <ui:AddQueueItem.Deadline>
+                      <InArgument x:TypeArguments="s:Nullable(s:DateTime)" />
+                    </ui:AddQueueItem.Deadline>
+                    <ui:AddQueueItem.PostponeFor>
+                      <InArgument x:TypeArguments="s:Nullable(s:DateTime)" />
+                    </ui:AddQueueItem.PostponeFor>
+                  </ui:AddQueueItem>
+                  <Assign DisplayName="Increment queued counter" sap:VirtualizedContainerService.HintSize="416,104.8" sap2010:WorkflowViewState.IdRef="Assign_Counter">
+                    <Assign.To>
+                      <OutArgument x:TypeArguments="x:Int32">[int_QueuedCount]</OutArgument>
+                    </Assign.To>
+                    <Assign.Value>
+                      <InArgument x:TypeArguments="x:Int32">[int_QueuedCount + 1]</InArgument>
+                    </Assign.Value>
+                  </Assign>
+                </Sequence>
+              </TryCatch.Try>
+              <TryCatch.Catches>
+                <Catch x:TypeArguments="s:Exception" sap2010:WorkflowViewState.IdRef="Catch_AddQueueError">
+                  <ActivityAction x:TypeArguments="s:Exception">
+                    <ActivityAction.Argument>
+                      <DelegateInArgument x:TypeArguments="s:Exception" Name="QueueEx" />
+                    </ActivityAction.Argument>
+                    <Sequence DisplayName="Mark item as failed" sap:VirtualizedContainerService.HintSize="449.6,254.4" sap2010:WorkflowViewState.IdRef="Sequence_MarkFailed">
+                      <Assign DisplayName="Increment failed counter" sap:VirtualizedContainerService.HintSize="416,104.8" sap2010:WorkflowViewState.IdRef="Assign_FailedCounter">
+                        <Assign.To>
+                          <OutArgument x:TypeArguments="x:Int32">[int_FailedCount]</OutArgument>
+                        </Assign.To>
+                        <Assign.Value>
+                          <InArgument x:TypeArguments="x:Int32">[int_FailedCount + 1]</InArgument>
+                        </Assign.Value>
+                      </Assign>
+                      <ui:LogMessage DisplayName="Log queue add failure" sap:VirtualizedContainerService.HintSize="416,117.6" sap2010:WorkflowViewState.IdRef="LogMessage_QueueAddFailure" Level="Warn" Message="[&quot;[Dispatcher] Failed to enqueue source row. &quot;+QueueEx.Message]" />
+                    </Sequence>
+                  </ActivityAction>
+                </Catch>
+              </TryCatch.Catches>
+            </TryCatch>
           </Sequence>
         </ActivityAction>
       </ui:ForEachRow.Body>
@@ -161,6 +201,38 @@
         <InArgument x:TypeArguments="x:Int32">[int_QueuedCount]</InArgument>
       </Assign.Value>
     </Assign>
-    <ui:LogMessage DisplayName="Log Dispatcher Process End" sap:VirtualizedContainerService.HintSize="700,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_End" Level="Info" Message="[&quot;[Dispatcher] Dispatch complete. Items queued: &quot; + int_QueuedCount.ToString + &quot; / &quot; + dt_SourceData.Rows.Count.ToString]" />
+    <Assign DisplayName="Assign out_ItemsTotal" sap:VirtualizedContainerService.HintSize="700,104.8" sap2010:WorkflowViewState.IdRef="Assign_OutTotal">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">[out_ItemsTotal]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">[int_TotalCount]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign out_ItemsFailed" sap:VirtualizedContainerService.HintSize="700,104.8" sap2010:WorkflowViewState.IdRef="Assign_OutFailed">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">[out_ItemsFailed]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">[int_FailedCount]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign skipped items" sap:VirtualizedContainerService.HintSize="700,104.8" sap2010:WorkflowViewState.IdRef="Assign_SkippedDerived">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">[int_SkippedCount]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">[Math.Max(0, int_TotalCount - int_QueuedCount - int_FailedCount)]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Assign out_ItemsSkipped" sap:VirtualizedContainerService.HintSize="700,104.8" sap2010:WorkflowViewState.IdRef="Assign_OutSkipped">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">[out_ItemsSkipped]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">[int_SkippedCount]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Dispatcher Process End" sap:VirtualizedContainerService.HintSize="700,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_End" Level="Info" Message="[&quot;[Dispatcher] Dispatch complete. Total=&quot; + int_TotalCount.ToString + &quot;, Queued=&quot; + int_QueuedCount.ToString + &quot;, Skipped=&quot; + int_SkippedCount.ToString + &quot;, Failed=&quot; + int_FailedCount.ToString]" />
   </Sequence>
 </Activity>

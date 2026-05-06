@@ -3,22 +3,53 @@
     "OrchestratorQueueName": "DispatcherQueue",
     "OrchestratorQueueFolder": "",
     "logF_BusinessProcessName": "REF-Dispatcher",
+    "logF_SystemArea": "Dispatcher",
+    "logF_Environment": "DEV",
+    "RuntimeMode": "framework",
+    "SourceSystem": "UNKNOWN",
     "MaxRetryNumber": 1,
     "RetryNumberGetTransactionItem": 1,
     "SourceDataPath": "Data\\Input\\SourceData.xlsx",
-    "SourceDataSheet": "Sheet1"
+    "SourceDataSheet": "Sheet1",
+    "RunReportEnabled": true,
+    "RunReportOutputPath": "Data\\Output\\RunReport_{RunId}.json"
   },
   "Constants": {
     "MaxConsecutiveSystemExceptions": 3,
     "ProcessVersion": "1.0.0"
   },
   "Assets": [],
-  "AIConfig": {
+  "AI": {
     "Enabled": false,
-    "Endpoint": "https://api.anthropic.com/v1/messages",
-    "ModelName": "claude-sonnet-4-6",
-    "APIKeyAsset": "AI_APIKey",
-    "MaxTokens": 1024,
-    "SystemPrompt": "You are an intelligent RPA assistant helping process business transactions."
+    "Provider": "none",
+    "ConfidenceThreshold": 0.8,
+    "HumanReviewThreshold": 0.6,
+    "TimeoutSec": 30,
+    "CostLimitPerRun": 5.0,
+    "AllowPII": false,
+    "FallbackMode": "ruleBased",
+    "Providers": {
+      "openai": {
+        "Endpoint": "https://api.openai.com/v1/responses",
+        "ModelName": "gpt-4.1-mini",
+        "APIKeyAsset": "OPENAI_API_KEY",
+        "MaxTokens": 1024,
+        "SystemPrompt": "You are an intelligent RPA assistant helping process business transactions."
+      },
+      "anthropic": {
+        "Endpoint": "https://api.anthropic.com/v1/messages",
+        "ModelName": "claude-sonnet-4-6",
+        "APIKeyAsset": "ANTHROPIC_API_KEY",
+        "MaxTokens": 1024,
+        "SystemPrompt": "You are an intelligent RPA assistant helping process business transactions."
+      },
+      "azureOpenAI": {
+        "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/openai/deployments/YOUR-DEPLOYMENT/responses?api-version=2024-10-21",
+        "ModelName": "gpt-4.1-mini",
+        "APIKeyAsset": "AZURE_OPENAI_API_KEY",
+        "MaxTokens": 1024,
+        "SystemPrompt": "You are an intelligent RPA assistant helping process business transactions."
+      }
+    }
   }
 }

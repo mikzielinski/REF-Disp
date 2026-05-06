@@ -104,72 +104,22 @@
         <OutArgument x:TypeArguments="x:String">[str_ConfigJson]</OutArgument>
       </ui:ReadTextFile.Content>
     </ui:ReadTextFile>
-    <ui:InvokeCode sap2010:Annotation.AnnotationText="Parse the JSON config file. Loads Settings and Constants sections into the Config dictionary." DisplayName="Parse JSON: Settings and Constants" sap:VirtualizedContainerService.HintSize="539.2,180" sap2010:WorkflowViewState.IdRef="InvokeCode_1" Language="VB">
-      <ui:InvokeCode.Code>
-        <![CDATA[
-Dim jo As Newtonsoft.Json.Linq.JObject = Newtonsoft.Json.Linq.JObject.Parse(p_JsonText)
-For Each section As String In New String() {"Settings", "Constants"}
-    Dim tok As Newtonsoft.Json.Linq.JToken = jo(section)
-    If tok IsNot Nothing Then
-        For Each prop As Newtonsoft.Json.Linq.JProperty In CType(tok, Newtonsoft.Json.Linq.JObject).Properties()
-            p_Config(prop.Name) = prop.Value.ToString()
-        Next
-    End If
-Next
-        ]]>
-      </ui:InvokeCode.Code>
-      <ui:InvokeCode.Parameters>
-        <scg:List x:TypeArguments="ui:CodeArgument" Capacity="4">
-          <ui:CodeArgument Direction="In" Name="p_JsonText">
-            <ui:CodeArgument.Value>
-              <InArgument x:TypeArguments="x:String">[str_ConfigJson]</InArgument>
-            </ui:CodeArgument.Value>
-          </ui:CodeArgument>
-          <ui:CodeArgument Direction="InOut" Name="p_Config">
-            <ui:CodeArgument.Value>
-              <InOutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[out_Config]</InOutArgument>
-            </ui:CodeArgument.Value>
-          </ui:CodeArgument>
-        </scg:List>
-      </ui:InvokeCode.Parameters>
-    </ui:InvokeCode>
-    <ui:InvokeCode sap2010:Annotation.AnnotationText="Builds a DataTable from the Assets array in Config.json. Columns: Name, Asset, OrchestratorAssetFolder. Used by the GetRobotAsset loop below." DisplayName="Build Assets DataTable from JSON" sap:VirtualizedContainerService.HintSize="539.2,180" sap2010:WorkflowViewState.IdRef="InvokeCode_2" Language="VB">
-      <ui:InvokeCode.Code>
-        <![CDATA[
-Dim jo As Newtonsoft.Json.Linq.JObject = Newtonsoft.Json.Linq.JObject.Parse(p_JsonText)
-Dim dt As New System.Data.DataTable()
-dt.Columns.Add("Name")
-dt.Columns.Add("Asset")
-dt.Columns.Add("OrchestratorAssetFolder")
-Dim assetsToken As Newtonsoft.Json.Linq.JToken = jo("Assets")
-If assetsToken IsNot Nothing Then
-    For Each item As Newtonsoft.Json.Linq.JToken In CType(assetsToken, Newtonsoft.Json.Linq.JArray)
-        Dim assetObj As Newtonsoft.Json.Linq.JObject = CType(item, Newtonsoft.Json.Linq.JObject)
-        Dim row As System.Data.DataRow = dt.NewRow()
-        row("Name") = If(assetObj("Name") IsNot Nothing, assetObj("Name").ToString(), "")
-        row("Asset") = If(assetObj("Asset") IsNot Nothing, assetObj("Asset").ToString(), "")
-        row("OrchestratorAssetFolder") = If(assetObj("OrchestratorAssetFolder") IsNot Nothing, assetObj("OrchestratorAssetFolder").ToString(), "")
-        dt.Rows.Add(row)
-    Next
-End If
-p_Assets = dt
-        ]]>
-      </ui:InvokeCode.Code>
-      <ui:InvokeCode.Parameters>
-        <scg:List x:TypeArguments="ui:CodeArgument" Capacity="4">
-          <ui:CodeArgument Direction="In" Name="p_JsonText">
-            <ui:CodeArgument.Value>
-              <InArgument x:TypeArguments="x:String">[str_ConfigJson]</InArgument>
-            </ui:CodeArgument.Value>
-          </ui:CodeArgument>
-          <ui:CodeArgument Direction="Out" Name="p_Assets">
-            <ui:CodeArgument.Value>
-              <OutArgument x:TypeArguments="sd:DataTable">[dt_Assets]</OutArgument>
-            </ui:CodeArgument.Value>
-          </ui:CodeArgument>
-        </scg:List>
-      </ui:InvokeCode.Parameters>
-    </ui:InvokeCode>
+    <Assign DisplayName="Merge Settings and Constants into Config (Assign only)" sap:VirtualizedContainerService.HintSize="539.2,104.8" sap2010:WorkflowViewState.IdRef="Assign_24">
+      <Assign.To>
+        <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[out_Config]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[New Dictionary(Of String, Object)(New Newtonsoft.Json.Linq.JObject(Newtonsoft.Json.Linq.JObject.Parse(str_ConfigJson).Properties().Where(Function(p) p.Name = "Settings" OrElse p.Name = "Constants").SelectMany(Function(p) CType(p.Value, Newtonsoft.Json.Linq.JObject).Properties())).Properties().ToDictionary(Function(pp) pp.Name, Function(pp) CType(pp.Value.ToString(), Object)))]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <Assign DisplayName="Initialize Assets DataTable (Assign only)" sap:VirtualizedContainerService.HintSize="539.2,104.8" sap2010:WorkflowViewState.IdRef="Assign_25">
+      <Assign.To>
+        <OutArgument x:TypeArguments="sd:DataTable">[dt_Assets]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="sd:DataTable">[New DataTable()]</InArgument>
+      </Assign.Value>
+    </Assign>
     <TryCatch DisplayName="Try loading Orchestrator assets" sap:VirtualizedContainerService.HintSize="539.2,1400" sap2010:WorkflowViewState.IdRef="TryCatch_2">
       <sap:WorkflowViewStateService.ViewState>
         <scg:Dictionary x:TypeArguments="x:String, x:Object">

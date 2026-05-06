@@ -1,4 +1,4 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Main" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Main" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
     <x:Property Name="in_OrchestratorQueueName" Type="InArgument(x:String)" />
     <x:Property Name="in_OrchestratorQueueFolder" Type="InArgument(x:String)" />
@@ -7,38 +7,77 @@
   <VisualBasic.Settings>
     <x:Null />
   </VisualBasic.Settings>
-  <Sequence DisplayName="Main Dispatcher Run" sap:VirtualizedContainerService.HintSize="1054,2014" sap2010:WorkflowViewState.IdRef="Sequence_1">
+  <sap2010:WorkflowViewState.IdRef>ActivityBuilder_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Runtime.Serialization</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.Studio.Constants</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Collections.NonGeneric</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.Private.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.Private.DataContractSerialization</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Formatters</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization.Primitives</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence DisplayName="Main Dispatcher Run" sap:VirtualizedContainerService.HintSize="1120.4,3826.4" sap2010:WorkflowViewState.IdRef="Sequence_1">
     <Sequence.Variables>
       <Variable x:TypeArguments="scg:Dictionary(x:String, x:Object)" Name="Config" />
       <Variable x:TypeArguments="s:DateTime" Name="RunStartUtc" />
       <Variable x:TypeArguments="s:DateTime" Name="RunEndUtc" />
-      <Variable x:TypeArguments="x:Double" Name="RunDurationSec" Default="0" />
+      <Variable x:TypeArguments="x:Double" Default="0" Name="RunDurationSec" />
       <Variable x:TypeArguments="x:String" Name="RunId" />
-      <Variable x:TypeArguments="x:String" Name="AIEnabled" Default="false" />
-      <Variable x:TypeArguments="x:String" Name="AIProvider" Default="none" />
-      <Variable x:TypeArguments="x:String" Name="RuntimeMode" Default="framework" />
-      <Variable x:TypeArguments="x:Int32" Name="ItemsQueued" Default="0" />
-      <Variable x:TypeArguments="x:Int32" Name="ItemsTotal" Default="0" />
-      <Variable x:TypeArguments="x:Int32" Name="ItemsSkipped" Default="0" />
-      <Variable x:TypeArguments="x:Int32" Name="ItemsFailed" Default="0" />
+      <Variable x:TypeArguments="x:String" Default="false" Name="AIEnabled" />
+      <Variable x:TypeArguments="x:String" Default="none" Name="AIProvider" />
+      <Variable x:TypeArguments="x:String" Default="framework" Name="RuntimeMode" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="ItemsQueued" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="ItemsTotal" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="ItemsSkipped" />
+      <Variable x:TypeArguments="x:Int32" Default="0" Name="ItemsFailed" />
       <Variable x:TypeArguments="x:String" Name="RunReportOutputPath" />
       <Variable x:TypeArguments="x:String" Name="RunReportJson" />
     </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
     <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke InitAllSettings workflow" sap:VirtualizedContainerService.HintSize="1012,176" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_1" UnSafe="False" WorkflowFileName="Framework\InitAllSettings.xaml">
       <ui:InvokeWorkflowFile.Arguments>
         <InArgument x:TypeArguments="x:String" x:Key="in_ConfigFile">Data\Config.json</InArgument>
         <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)" x:Key="out_Config">[Config]</OutArgument>
       </ui:InvokeWorkflowFile.Arguments>
     </ui:InvokeWorkflowFile>
-    <Assign DisplayName="Assign RunStartUtc" sap:VirtualizedContainerService.HintSize="1012,104.8" sap2010:WorkflowViewState.IdRef="Assign_1">
+    <Assign DisplayName="Assign RunStartUtc" sap:VirtualizedContainerService.HintSize="1012,174.4" sap2010:WorkflowViewState.IdRef="Assign_1">
       <Assign.To>
         <OutArgument x:TypeArguments="s:DateTime">[RunStartUtc]</OutArgument>
       </Assign.To>
       <Assign.Value>
-        <InArgument x:TypeArguments="s:DateTime">[Now.ToUniversalTime]</InArgument>
+        <InArgument x:TypeArguments="s:DateTime">[System.DateTime.UtcNow]</InArgument>
       </Assign.Value>
     </Assign>
-    <Assign DisplayName="Assign RunId" sap:VirtualizedContainerService.HintSize="1012,104.8" sap2010:WorkflowViewState.IdRef="Assign_2">
+    <Assign DisplayName="Assign RunId" sap:VirtualizedContainerService.HintSize="1012,174.4" sap2010:WorkflowViewState.IdRef="Assign_2">
       <Assign.To>
         <OutArgument x:TypeArguments="x:String">[RunId]</OutArgument>
       </Assign.To>
@@ -46,38 +85,38 @@
         <InArgument x:TypeArguments="x:String">[Guid.NewGuid.ToString("N")]</InArgument>
       </Assign.Value>
     </Assign>
-    <If Condition="[Not Config.ContainsKey(&quot;logF_BusinessProcessName&quot;)]" DisplayName="Default BusinessProcessName" sap:VirtualizedContainerService.HintSize="1012,180.8" sap2010:WorkflowViewState.IdRef="If_1">
+    <If Condition="[Not Config.ContainsKey(&quot;logF_BusinessProcessName&quot;)]" DisplayName="Default BusinessProcessName" sap:VirtualizedContainerService.HintSize="1012,323.2" sap2010:WorkflowViewState.IdRef="If_1">
       <If.Then>
-        <Assign DisplayName="Assign default BusinessProcessName" sap:VirtualizedContainerService.HintSize="334.4,104.8" sap2010:WorkflowViewState.IdRef="Assign_3">
+        <Assign DisplayName="Assign default BusinessProcessName" sap:VirtualizedContainerService.HintSize="334.4,142.4" sap2010:WorkflowViewState.IdRef="Assign_3">
           <Assign.To>
             <OutArgument x:TypeArguments="x:Object">[Config("logF_BusinessProcessName")]</OutArgument>
           </Assign.To>
           <Assign.Value>
-            <InArgument x:TypeArguments="x:Object">REF-Dispatcher</InArgument>
+            <InArgument x:TypeArguments="x:Object">["REF-Dispatcher"]</InArgument>
           </Assign.Value>
         </Assign>
       </If.Then>
     </If>
-    <If Condition="[Not Config.ContainsKey(&quot;logF_Environment&quot;)]" DisplayName="Default Environment" sap:VirtualizedContainerService.HintSize="1012,180.8" sap2010:WorkflowViewState.IdRef="If_2">
+    <If Condition="[Not Config.ContainsKey(&quot;logF_Environment&quot;)]" DisplayName="Default Environment" sap:VirtualizedContainerService.HintSize="1012,285.6" sap2010:WorkflowViewState.IdRef="If_2">
       <If.Then>
         <Assign DisplayName="Assign default Environment" sap:VirtualizedContainerService.HintSize="334.4,104.8" sap2010:WorkflowViewState.IdRef="Assign_4">
           <Assign.To>
             <OutArgument x:TypeArguments="x:Object">[Config("logF_Environment")]</OutArgument>
           </Assign.To>
           <Assign.Value>
-            <InArgument x:TypeArguments="x:Object">DEV</InArgument>
+            <InArgument x:TypeArguments="x:Object">["DEV"]</InArgument>
           </Assign.Value>
         </Assign>
       </If.Then>
     </If>
-    <If Condition="[Not Config.ContainsKey(&quot;RuntimeMode&quot;)]" DisplayName="Default RuntimeMode" sap:VirtualizedContainerService.HintSize="1012,180.8" sap2010:WorkflowViewState.IdRef="If_3">
+    <If Condition="[Not Config.ContainsKey(&quot;RuntimeMode&quot;)]" DisplayName="Default RuntimeMode" sap:VirtualizedContainerService.HintSize="1012,285.6" sap2010:WorkflowViewState.IdRef="If_3">
       <If.Then>
         <Assign DisplayName="Assign default RuntimeMode" sap:VirtualizedContainerService.HintSize="334.4,104.8" sap2010:WorkflowViewState.IdRef="Assign_5">
           <Assign.To>
             <OutArgument x:TypeArguments="x:Object">[Config("RuntimeMode")]</OutArgument>
           </Assign.To>
           <Assign.Value>
-            <InArgument x:TypeArguments="x:Object">framework</InArgument>
+            <InArgument x:TypeArguments="x:Object">["framework"]</InArgument>
           </Assign.Value>
         </Assign>
       </If.Then>
@@ -133,7 +172,7 @@
             <OutArgument x:TypeArguments="x:Object">[Config("logF_Environment")]</OutArgument>
           </Assign.To>
           <Assign.Value>
-            <InArgument x:TypeArguments="x:Object">[in_EnvironmentType.ToUpperInvariant]</InArgument>
+            <InArgument x:TypeArguments="x:Object">[in_EnvironmentType.ToUpperInvariant()]</InArgument>
           </Assign.Value>
         </Assign>
       </If.Then>
@@ -164,13 +203,17 @@
         <OutArgument x:TypeArguments="x:Int32" x:Key="out_ItemsFailed">[ItemsFailed]</OutArgument>
       </ui:InvokeWorkflowFile.Arguments>
     </ui:InvokeWorkflowFile>
-    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke CloseAllApplications workflow" sap:VirtualizedContainerService.HintSize="1012,167.2" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_4" UnSafe="False" WorkflowFileName="Framework\CloseAllApplications.xaml" />
+    <ui:InvokeWorkflowFile ArgumentsVariable="{x:Null}" ContinueOnError="{x:Null}" DisplayName="Invoke CloseAllApplications workflow" sap:VirtualizedContainerService.HintSize="1012,167.2" sap2010:WorkflowViewState.IdRef="InvokeWorkflowFile_4" UnSafe="False" WorkflowFileName="Framework\CloseAllApplications.xaml">
+      <ui:InvokeWorkflowFile.Arguments>
+        <scg:Dictionary x:TypeArguments="x:String, Argument" />
+      </ui:InvokeWorkflowFile.Arguments>
+    </ui:InvokeWorkflowFile>
     <Assign DisplayName="Assign RunEndUtc" sap:VirtualizedContainerService.HintSize="1012,104.8" sap2010:WorkflowViewState.IdRef="Assign_11">
       <Assign.To>
         <OutArgument x:TypeArguments="s:DateTime">[RunEndUtc]</OutArgument>
       </Assign.To>
       <Assign.Value>
-        <InArgument x:TypeArguments="s:DateTime">[Now.ToUniversalTime]</InArgument>
+        <InArgument x:TypeArguments="s:DateTime">[System.DateTime.UtcNow]</InArgument>
       </Assign.Value>
     </Assign>
     <Assign DisplayName="Assign RunDurationSec" sap:VirtualizedContainerService.HintSize="1012,104.8" sap2010:WorkflowViewState.IdRef="Assign_12">
@@ -199,7 +242,7 @@
     </Assign>
     <If Condition="[Convert.ToBoolean(If(Config.ContainsKey(&quot;RunReportEnabled&quot;),Config(&quot;RunReportEnabled&quot;).ToString,&quot;True&quot;))]" DisplayName="If RunReportEnabled" sap:VirtualizedContainerService.HintSize="1012,176" sap2010:WorkflowViewState.IdRef="If_8">
       <If.Then>
-        <ui:WriteTextFile DisplayName="Write run report JSON" sap:VirtualizedContainerService.HintSize="353.6,120" sap2010:WorkflowViewState.IdRef="WriteTextFile_1" FileName="[RunReportOutputPath]" Text="[RunReportJson]" />
+        <ui:WriteTextFile File="{x:Null}" Output="{x:Null}" DisplayName="Write run report JSON" FileName="[RunReportOutputPath]" sap:VirtualizedContainerService.HintSize="353.6,120" sap2010:WorkflowViewState.IdRef="WriteTextFile_1" Text="[RunReportJson]" />
       </If.Then>
     </If>
     <ui:LogMessage DisplayName="Log RUN_REPORT" sap:VirtualizedContainerService.HintSize="1012,174.4" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;RUN_REPORT | RunId=&quot;+RunId+&quot; | StartUtc=&quot;+RunStartUtc.ToString(&quot;o&quot;)+&quot; | EndUtc=&quot;+RunEndUtc.ToString(&quot;o&quot;)+&quot; | DurationSec=&quot;+Math.Round(RunDurationSec,2).ToString+&quot; | Total=&quot;+ItemsTotal.ToString+&quot; | Queued=&quot;+ItemsQueued.ToString+&quot; | Skipped=&quot;+ItemsSkipped.ToString+&quot; | Failed=&quot;+ItemsFailed.ToString+&quot; | Queue=&quot;+Config(&quot;OrchestratorQueueName&quot;).ToString+&quot; | AIEnabled=&quot;+AIEnabled+&quot; | AIProvider=&quot;+AIProvider+&quot; | RuntimeMode=&quot;+RuntimeMode]" />

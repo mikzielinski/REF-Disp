@@ -1,0 +1,7 @@
+.local/
+.objects/
+.project/
+.settings/
+.storage/
+.tmh/
+~*.xaml

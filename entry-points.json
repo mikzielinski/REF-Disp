@@ -15,8 +15,7 @@
             "type": "string"
           },
           "in_EnvironmentType": {
-            "type": "string",
-            "description": "Environment type override, e.g. DEV/TEST/UAT/PROD."
+            "type": "string"
           }
         },
         "required": []

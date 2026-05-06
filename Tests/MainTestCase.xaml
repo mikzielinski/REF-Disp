@@ -131,20 +131,23 @@
           <x:Boolean x:Key="IsExpanded">True</x:Boolean>
         </scg:Dictionary>
       </sap:WorkflowViewStateService.ViewState>
-      <ui:ReadRange AddHeaders="True" DataTable="[dt_ResultsData]" DisplayName="Read Resulted Data" sap:VirtualizedContainerService.HintSize="533.3333333333334,120" sap2010:WorkflowViewState.IdRef="ReadRange_1" SheetName="Tests" WorkbookPath="[StatusFileName]">
-        <ui:ReadRange.Range>
-          <InArgument x:TypeArguments="x:String">
-            <Literal x:TypeArguments="x:String" Value="" />
-          </InArgument>
-        </ui:ReadRange.Range>
-      </ui:ReadRange>
-      <ui:ReadRange AddHeaders="True" DataTable="[dt_ExpectedData]" DisplayName="Read Expected Data" sap:VirtualizedContainerService.HintSize="533.6,97.6" sap2010:WorkflowViewState.IdRef="ReadRange_2" SheetName="Result" WorkbookPath="[ExpectedDataFileName]">
-        <ui:ReadRange.Range>
-          <InArgument x:TypeArguments="x:String">
-            <Literal x:TypeArguments="x:String" Value="" />
-          </InArgument>
-        </ui:ReadRange.Range>
-      </ui:ReadRange>
+      <ui:Comment DisplayName="Excel-based verification disabled" sap:VirtualizedContainerService.HintSize="533.6,56" sap2010:WorkflowViewState.IdRef="Comment_2" Text="Excel ReadRange steps are disabled because UiPath.Excel.Activities is not a project dependency." />
+      <Assign DisplayName="Init dt_ResultsData" sap:VirtualizedContainerService.HintSize="533.6,104.8" sap2010:WorkflowViewState.IdRef="Assign_1">
+        <Assign.To>
+          <OutArgument x:TypeArguments="sd:DataTable">[dt_ResultsData]</OutArgument>
+        </Assign.To>
+        <Assign.Value>
+          <InArgument x:TypeArguments="sd:DataTable">[New DataTable()]</InArgument>
+        </Assign.Value>
+      </Assign>
+      <Assign DisplayName="Init dt_ExpectedData" sap:VirtualizedContainerService.HintSize="533.6,104.8" sap2010:WorkflowViewState.IdRef="Assign_2">
+        <Assign.To>
+          <OutArgument x:TypeArguments="sd:DataTable">[dt_ExpectedData]</OutArgument>
+        </Assign.To>
+        <Assign.Value>
+          <InArgument x:TypeArguments="sd:DataTable">[New DataTable()]</InArgument>
+        </Assign.Value>
+      </Assign>
       <uta:VerifyExpressionWithOperator AlternativeVerificationTitle="{x:Null}" KeepScreenshots="{x:Null}" OutputMessageFormat="{x:Null}" Result="{x:Null}" ScreenshotsPath="{x:Null}" ContinueOnFailure="True" DisplayName="Verify if result data count matches expected data count" sap:VirtualizedContainerService.HintSize="533.6,72" sap2010:WorkflowViewState.IdRef="VerifyExpressionWithOperator_1" Operator="Equality" TakeScreenshotInCaseOfFailingAssertion="False" TakeScreenshotInCaseOfSucceedingAssertion="False">
         <uta:VerifyExpressionWithOperator.FirstExpression>
           <InArgument x:TypeArguments="x:Int32">[dt_ExpectedData.Rows.Count]</InArgument>

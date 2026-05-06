@@ -1,0 +1,236 @@
+<Activity mc:Ignorable="sap sap2010" x:Class="AIAgentCall" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property sap2010:Annotation.AnnotationText="Configuration dictionary — must contain AIConfig.Endpoint, AIConfig.ModelName, AIConfig.MaxTokens, AIConfig.SystemPrompt, and the Orchestrator asset name for the API key in AIConfig.APIKeyAsset." Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property sap2010:Annotation.AnnotationText="Instruction / task description for the AI model. Tells the model what to do with the context data." Name="in_Prompt" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Serialised transaction data passed as context to the AI model (e.g. JSON string of SpecificContent)." Name="in_ContextData" Type="InArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="Raw text response from the AI model. Parse as JSON in the caller if a structured response is expected." Name="out_AIResponse" Type="OutArgument(x:String)" />
+    <x:Property sap2010:Annotation.AnnotationText="HTTP status code returned by the AI API call. 200 = success. Inspect on error." Name="out_StatusCode" Type="OutArgument(x:Int32)" />
+  </x:Members>
+  <VisualBasic.Settings>
+    <x:Null />
+  </VisualBasic.Settings>
+  <sap:VirtualizedContainerService.HintSize>1000,2000</sap:VirtualizedContainerService.HintSize>
+  <sap2010:WorkflowViewState.IdRef>AIAgentCall_1</sap2010:WorkflowViewState.IdRef>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
+      <x:String>Microsoft.VisualBasic</x:String>
+      <x:String>Microsoft.VisualBasic.Activities</x:String>
+      <x:String>Newtonsoft.Json</x:String>
+      <x:String>Newtonsoft.Json.Linq</x:String>
+      <x:String>System</x:String>
+      <x:String>System.Activities</x:String>
+      <x:String>System.Activities.Expressions</x:String>
+      <x:String>System.Activities.Statements</x:String>
+      <x:String>System.Activities.Validation</x:String>
+      <x:String>System.Activities.XamlIntegration</x:String>
+      <x:String>System.Collections</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Collections.ObjectModel</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Diagnostics</x:String>
+      <x:String>System.IO</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Net.Http</x:String>
+      <x:String>System.Runtime.Serialization</x:String>
+      <x:String>System.Windows.Markup</x:String>
+      <x:String>System.Xml</x:String>
+      <x:String>System.Xml.Linq</x:String>
+      <x:String>UiPath.Core</x:String>
+      <x:String>UiPath.Core.Activities</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="32">
+      <AssemblyReference>Microsoft.Bcl.AsyncInterfaces</AssemblyReference>
+      <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Newtonsoft.Json</AssemblyReference>
+      <AssemblyReference>PresentationCore</AssemblyReference>
+      <AssemblyReference>PresentationFramework</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections</AssemblyReference>
+      <AssemblyReference>System.ComponentModel</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.Composition</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.TypeConverter</AssemblyReference>
+      <AssemblyReference>System.Configuration.ConfigurationManager</AssemblyReference>
+      <AssemblyReference>System.Console</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Linq</AssemblyReference>
+      <AssemblyReference>System.Memory</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.ObjectModel</AssemblyReference>
+      <AssemblyReference>System.Private.CoreLib</AssemblyReference>
+      <AssemblyReference>System.Private.Uri</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
+      <AssemblyReference>System.Security.Permissions</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities</AssemblyReference>
+      <AssemblyReference>UiPath.System.Activities.Design</AssemblyReference>
+      <AssemblyReference>UiPath.Workflow</AssemblyReference>
+      <AssemblyReference>WindowsBase</AssemblyReference>
+    </scg:List>
+  </TextExpression.ReferencesForImplementation>
+  <Sequence sap2010:Annotation.AnnotationText="AI AGENT CALL&#xA;&#xA;Sends a request to the configured AI model (default: Claude via Anthropic API) and returns the raw text response.&#xA;&#xA;Configuration keys required in Config.json under AIConfig (flattened into Config dict as &quot;AIConfig.X&quot;):&#xA;  AIConfig.Endpoint     - API URL  (e.g. https://api.anthropic.com/v1/messages)&#xA;  AIConfig.ModelName    - Model ID (e.g. claude-sonnet-4-6)&#xA;  AIConfig.MaxTokens   - Token limit (e.g. 1024)&#xA;  AIConfig.SystemPrompt - System instruction&#xA;  AIConfig.APIKeyAsset  - Name of the Orchestrator asset holding the API key&#xA;&#xA;The API key is read from Config (loaded from Orchestrator asset by InitAllSettings).&#xA;&#xA;To swap AI providers: update Endpoint, ModelName, and adjust the request body in &quot;Build AI Request Body&quot;." DisplayName="AI Agent Call" sap:VirtualizedContainerService.HintSize="960,1950" sap2010:WorkflowViewState.IdRef="Sequence_AI">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="x:String" Name="str_APIKey" Default="[String.Empty]" />
+      <Variable x:TypeArguments="x:String" Name="str_Endpoint" Default="[String.Empty]" />
+      <Variable x:TypeArguments="x:String" Name="str_ModelName" Default="[String.Empty]" />
+      <Variable x:TypeArguments="x:String" Name="str_SystemPrompt" Default="[String.Empty]" />
+      <Variable x:TypeArguments="x:Int32" Name="int_MaxTokens" Default="[1024]" />
+      <Variable x:TypeArguments="x:String" Name="str_RequestBody" Default="[String.Empty]" />
+      <Variable x:TypeArguments="x:String" Name="str_RawResponse" Default="[String.Empty]" />
+      <Variable x:TypeArguments="x:Int32" Name="int_StatusCode" Default="[0]" />
+    </Sequence.Variables>
+    <sap:WorkflowViewStateService.ViewState>
+      <scg:Dictionary x:TypeArguments="x:String, x:Object">
+        <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+      </scg:Dictionary>
+    </sap:WorkflowViewStateService.ViewState>
+    <ui:LogMessage DisplayName="Log AI Agent Call Start" sap:VirtualizedContainerService.HintSize="920,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_Start" Level="Trace" Message="[&quot;[AIAgent] Starting AI agent call. Model: &quot; + in_Config(&quot;AIConfig.ModelName&quot;).ToString]" />
+    <Sequence DisplayName="Read Config Values" sap:VirtualizedContainerService.HintSize="920,320" sap2010:WorkflowViewState.IdRef="Sequence_Config">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <Assign DisplayName="Read API Endpoint" sap:VirtualizedContainerService.HintSize="880,104.8" sap2010:WorkflowViewState.IdRef="Assign_Endpoint">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[str_Endpoint]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Config("AIConfig.Endpoint").ToString]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="Read Model Name" sap:VirtualizedContainerService.HintSize="880,104.8" sap2010:WorkflowViewState.IdRef="Assign_Model">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[str_ModelName]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Config("AIConfig.ModelName").ToString]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="Read System Prompt" sap:VirtualizedContainerService.HintSize="880,104.8" sap2010:WorkflowViewState.IdRef="Assign_SysPrompt">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[str_SystemPrompt]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[in_Config("AIConfig.SystemPrompt").ToString]</InArgument></Assign.Value>
+      </Assign>
+      <Assign DisplayName="Read MaxTokens" sap:VirtualizedContainerService.HintSize="880,104.8" sap2010:WorkflowViewState.IdRef="Assign_Tokens">
+        <Assign.To><OutArgument x:TypeArguments="x:Int32">[int_MaxTokens]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:Int32">[CInt(in_Config("AIConfig.MaxTokens").ToString)]</InArgument></Assign.Value>
+      </Assign>
+      <Assign sap2010:Annotation.AnnotationText="The API key is stored as an Orchestrator asset and loaded into Config by InitAllSettings.&#xA;Asset name is defined in AIConfig.APIKeyAsset. The resolved value is stored under that asset name as key." DisplayName="Read API Key (from Orchestrator asset)" sap:VirtualizedContainerService.HintSize="880,104.8" sap2010:WorkflowViewState.IdRef="Assign_APIKey">
+        <Assign.To><OutArgument x:TypeArguments="x:String">[str_APIKey]</OutArgument></Assign.To>
+        <Assign.Value><InArgument x:TypeArguments="x:String">[If(in_Config.ContainsKey(in_Config("AIConfig.APIKeyAsset").ToString), in_Config(in_Config("AIConfig.APIKeyAsset").ToString).ToString, String.Empty)]</InArgument></Assign.Value>
+      </Assign>
+    </Sequence>
+    <ui:InvokeCode sap2010:Annotation.AnnotationText="Builds the Anthropic Messages API request body (JSON).&#xA;To use a different AI provider, update this code block to match their API schema." DisplayName="Build AI Request Body (Anthropic Messages API)" sap:VirtualizedContainerService.HintSize="920,180" sap2010:WorkflowViewState.IdRef="InvokeCode_Build" Language="VB">
+      <ui:InvokeCode.Code>
+        <![CDATA[
+Dim request As New Newtonsoft.Json.Linq.JObject()
+request("model") = p_ModelName
+request("max_tokens") = p_MaxTokens
+request("system") = p_SystemPrompt
+
+Dim userMessage As New Newtonsoft.Json.Linq.JObject()
+userMessage("role") = "user"
+userMessage("content") = p_Prompt & vbCrLf & vbCrLf & "Transaction data:" & vbCrLf & p_ContextData
+
+Dim messages As New Newtonsoft.Json.Linq.JArray()
+messages.Add(userMessage)
+request("messages") = messages
+
+p_RequestBody = request.ToString(Newtonsoft.Json.Formatting.None)
+        ]]>
+      </ui:InvokeCode.Code>
+      <ui:InvokeCode.Parameters>
+        <scg:List x:TypeArguments="ui:CodeArgument" Capacity="8">
+          <ui:CodeArgument Direction="In" Name="p_ModelName">
+            <ui:CodeArgument.Value><InArgument x:TypeArguments="x:String">[str_ModelName]</InArgument></ui:CodeArgument.Value>
+          </ui:CodeArgument>
+          <ui:CodeArgument Direction="In" Name="p_MaxTokens">
+            <ui:CodeArgument.Value><InArgument x:TypeArguments="x:Int32">[int_MaxTokens]</InArgument></ui:CodeArgument.Value>
+          </ui:CodeArgument>
+          <ui:CodeArgument Direction="In" Name="p_SystemPrompt">
+            <ui:CodeArgument.Value><InArgument x:TypeArguments="x:String">[str_SystemPrompt]</InArgument></ui:CodeArgument.Value>
+          </ui:CodeArgument>
+          <ui:CodeArgument Direction="In" Name="p_Prompt">
+            <ui:CodeArgument.Value><InArgument x:TypeArguments="x:String">[in_Prompt]</InArgument></ui:CodeArgument.Value>
+          </ui:CodeArgument>
+          <ui:CodeArgument Direction="In" Name="p_ContextData">
+            <ui:CodeArgument.Value><InArgument x:TypeArguments="x:String">[in_ContextData]</InArgument></ui:CodeArgument.Value>
+          </ui:CodeArgument>
+          <ui:CodeArgument Direction="Out" Name="p_RequestBody">
+            <ui:CodeArgument.Value><OutArgument x:TypeArguments="x:String">[str_RequestBody]</OutArgument></ui:CodeArgument.Value>
+          </ui:CodeArgument>
+        </scg:List>
+      </ui:InvokeCode.Parameters>
+    </ui:InvokeCode>
+    <ui:HttpClient sap2010:Annotation.AnnotationText="POST to AI endpoint. Headers: x-api-key (Anthropic) and anthropic-version.&#xA;For OpenAI-compatible providers, change header to Authorization: Bearer {APIKey} and adjust the URL." DisplayName="HTTP POST to AI Endpoint" sap:VirtualizedContainerService.HintSize="920,200" sap2010:WorkflowViewState.IdRef="HttpClient_1" AcceptFormat="JSON" BodyFormat="Application/Json" EndPoint="[str_Endpoint]" Method="POST" Body="[str_RequestBody]">
+      <ui:HttpClient.StatusCode>
+        <OutArgument x:TypeArguments="x:Int32">[int_StatusCode]</OutArgument>
+      </ui:HttpClient.StatusCode>
+      <ui:HttpClient.Result>
+        <OutArgument x:TypeArguments="x:String">[str_RawResponse]</OutArgument>
+      </ui:HttpClient.Result>
+      <ui:HttpClient.Headers>
+        <scg:Dictionary x:TypeArguments="x:String, x:String">
+          <x:String x:Key="x-api-key">[str_APIKey]</x:String>
+          <x:String x:Key="anthropic-version">2023-06-01</x:String>
+          <x:String x:Key="content-type">application/json</x:String>
+        </scg:Dictionary>
+      </ui:HttpClient.Headers>
+    </ui:HttpClient>
+    <Assign DisplayName="Assign out_StatusCode" sap:VirtualizedContainerService.HintSize="920,104.8" sap2010:WorkflowViewState.IdRef="Assign_Status">
+      <Assign.To><OutArgument x:TypeArguments="x:Int32">[out_StatusCode]</OutArgument></Assign.To>
+      <Assign.Value><InArgument x:TypeArguments="x:Int32">[int_StatusCode]</InArgument></Assign.Value>
+    </Assign>
+    <If sap2010:Annotation.AnnotationText="HTTP 200 = success. Extract the text content from the AI response.&#xA;Non-200 = throw System exception so the REF can retry the transaction." Condition="[int_StatusCode = 200]" DisplayName="If HTTP 200 (Success)" sap:VirtualizedContainerService.HintSize="920,500" sap2010:WorkflowViewState.IdRef="If_HTTP200">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <If.Then>
+        <Sequence DisplayName="Extract AI Response Text" sap:VirtualizedContainerService.HintSize="878,340" sap2010:WorkflowViewState.IdRef="Sequence_ExtractResp">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <ui:InvokeCode sap2010:Annotation.AnnotationText="Parses the Anthropic Messages API response envelope and extracts the assistant text.&#xA;For other providers, update the JSON path to match their response schema." DisplayName="Parse AI Response (Anthropic schema)" sap:VirtualizedContainerService.HintSize="838,180" sap2010:WorkflowViewState.IdRef="InvokeCode_Parse" Language="VB">
+            <ui:InvokeCode.Code>
+              <![CDATA[
+Dim jo As Newtonsoft.Json.Linq.JObject = Newtonsoft.Json.Linq.JObject.Parse(p_RawResponse)
+Dim content As Newtonsoft.Json.Linq.JArray = CType(jo("content"), Newtonsoft.Json.Linq.JArray)
+If content IsNot Nothing AndAlso content.Count > 0 Then
+    p_AIResponse = content(0)("text").ToString()
+Else
+    p_AIResponse = p_RawResponse
+End If
+              ]]>
+            </ui:InvokeCode.Code>
+            <ui:InvokeCode.Parameters>
+              <scg:List x:TypeArguments="ui:CodeArgument" Capacity="4">
+                <ui:CodeArgument Direction="In" Name="p_RawResponse">
+                  <ui:CodeArgument.Value><InArgument x:TypeArguments="x:String">[str_RawResponse]</InArgument></ui:CodeArgument.Value>
+                </ui:CodeArgument>
+                <ui:CodeArgument Direction="Out" Name="p_AIResponse">
+                  <ui:CodeArgument.Value><OutArgument x:TypeArguments="x:String">[out_AIResponse]</OutArgument></ui:CodeArgument.Value>
+                </ui:CodeArgument>
+              </scg:List>
+            </ui:InvokeCode.Parameters>
+          </ui:InvokeCode>
+          <ui:LogMessage DisplayName="Log AI Response Length" sap:VirtualizedContainerService.HintSize="838,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_RespLen" Level="Trace" Message="[&quot;[AIAgent] Response received. Length: &quot; + out_AIResponse.Length.ToString + &quot; chars.&quot;]" />
+        </Sequence>
+      </If.Then>
+      <If.Else>
+        <Sequence DisplayName="Handle AI API Error" sap:VirtualizedContainerService.HintSize="878,200" sap2010:WorkflowViewState.IdRef="Sequence_Error">
+          <sap:WorkflowViewStateService.ViewState>
+            <scg:Dictionary x:TypeArguments="x:String, x:Object">
+              <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            </scg:Dictionary>
+          </sap:WorkflowViewStateService.ViewState>
+          <ui:LogMessage DisplayName="Log AI API Error" sap:VirtualizedContainerService.HintSize="838,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_Error" Level="Error" Message="[&quot;[AIAgent] API call failed. Status: &quot; + int_StatusCode.ToString + &quot;. Body: &quot; + str_RawResponse]" />
+          <Throw DisplayName="Throw AI API Exception" Exception="[New Exception(&quot;AI API call failed with HTTP &quot; + int_StatusCode.ToString + &quot;. Response: &quot; + str_RawResponse)]" sap:VirtualizedContainerService.HintSize="838,113.6" sap2010:WorkflowViewState.IdRef="Throw_AIError" />
+        </Sequence>
+      </If.Else>
+    </If>
+  </Sequence>
+</Activity>

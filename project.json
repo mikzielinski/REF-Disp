@@ -1,10 +1,9 @@
 {
-  "name": "RoboticEnterpriseFramework-Disp",
+  "name": "REF-Dispatcher",
   "projectId": "6014b2b7-58c0-420d-9f28-ae562db1a00d",
-  "description": "Robotic Enterprise Framework",
+  "description": "REF Dispatcher — collects data from source systems and uploads items to Orchestrator queue. Config driven by Data/Config.json.",
   "main": "Main.xaml",
   "dependencies": {
-    "UiPath.Excel.Activities": "[3.3.1]",
     "UiPath.System.Activities": "[25.10.3]",
     "UiPath.Testing.Activities": "[25.10.0]",
     "UiPath.UIAutomation.Activities": "[25.10.19]"

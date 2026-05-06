@@ -1,0 +1,23 @@
+{
+  "Settings": {
+    "OrchestratorQueueName": "DispatcherQueue",
+    "OrchestratorQueueFolder": "",
+    "logF_BusinessProcessName": "REF-Performer",
+    "MaxRetryNumber": 3,
+    "RetryNumberGetTransactionItem": 1
+  },
+  "Constants": {
+    "MaxConsecutiveSystemExceptions": 3,
+    "ProcessVersion": "1.0.0"
+  },
+  "Assets": [
+  ],
+  "AIConfig": {
+    "Enabled": false,
+    "Endpoint": "https://api.anthropic.com/v1/messages",
+    "ModelName": "claude-sonnet-4-6",
+    "APIKeyAsset": "AI_APIKey",
+    "MaxTokens": 1024,
+    "SystemPrompt": "You are an intelligent RPA assistant helping process business transactions. Respond concisely with structured data."
+  }
+}

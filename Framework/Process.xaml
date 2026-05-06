@@ -1,15 +1,17 @@
-<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Activity mc:Ignorable="sap sap2010" x:Class="Process" xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:s="clr-namespace:System;assembly=System.Private.CoreLib" xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation" xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation" xmlns:scg="clr-namespace:System.Collections.Generic;assembly=System.Private.CoreLib" xmlns:sd="clr-namespace:System.Data;assembly=System.Data.Common" xmlns:ui="http://schemas.uipath.com/workflow/activities" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
-    <x:Property sap2010:Annotation.AnnotationText="Transaction item to be processed." Name="in_TransactionItem" Type="InArgument(ui:QueueItem)" />
     <x:Property sap2010:Annotation.AnnotationText="Dictionary structure to store configuration data of the process (settings, constants and assets)." Name="in_Config" Type="InArgument(scg:Dictionary(x:String, x:Object))" />
+    <x:Property sap2010:Annotation.AnnotationText="Output: number of items successfully added to the Orchestrator queue." Name="out_ItemsQueued" Type="OutArgument(x:Int32)" />
   </x:Members>
   <VisualBasic.Settings>
     <x:Null />
   </VisualBasic.Settings>
-  <sap:VirtualizedContainerService.HintSize>818.4,454.4</sap:VirtualizedContainerService.HintSize>
-  <sap2010:WorkflowViewState.IdRef>ProcessTransaction_1</sap2010:WorkflowViewState.IdRef>
+  <sap:VirtualizedContainerService.HintSize>900,1200</sap:VirtualizedContainerService.HintSize>
+  <sap2010:WorkflowViewState.IdRef>ProcessDispatcher_1</sap2010:WorkflowViewState.IdRef>
   <TextExpression.NamespacesForImplementation>
-    <scg:List x:TypeArguments="x:String" Capacity="50">
+    <scg:List x:TypeArguments="x:String" Capacity="32">
+      <x:String>GlobalConstantsNamespace</x:String>
+      <x:String>GlobalVariablesNamespace</x:String>
       <x:String>Microsoft.VisualBasic</x:String>
       <x:String>Microsoft.VisualBasic.Activities</x:String>
       <x:String>System</x:String>
@@ -29,21 +31,19 @@
       <x:String>System.Net.Mail</x:String>
       <x:String>System.Runtime.InteropServices</x:String>
       <x:String>System.Runtime.Serialization</x:String>
-      <x:String>System.Windows.Forms</x:String>
       <x:String>System.Windows.Markup</x:String>
       <x:String>System.Xml</x:String>
       <x:String>System.Xml.Linq</x:String>
       <x:String>UiPath.Core</x:String>
       <x:String>UiPath.Core.Activities</x:String>
-      <x:String>GlobalVariablesNamespace</x:String>
-      <x:String>GlobalConstantsNamespace</x:String>
     </scg:List>
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
-    <scg:List x:TypeArguments="AssemblyReference" Capacity="40">
+    <scg:List x:TypeArguments="AssemblyReference" Capacity="32">
       <AssemblyReference>Microsoft.Bcl.AsyncInterfaces</AssemblyReference>
       <AssemblyReference>Microsoft.VisualBasic</AssemblyReference>
       <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Newtonsoft.Json</AssemblyReference>
       <AssemblyReference>PresentationCore</AssemblyReference>
       <AssemblyReference>PresentationFramework</AssemblyReference>
       <AssemblyReference>System</AssemblyReference>
@@ -56,6 +56,7 @@
       <AssemblyReference>System.Console</AssemblyReference>
       <AssemblyReference>System.Core</AssemblyReference>
       <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.Common</AssemblyReference>
       <AssemblyReference>System.Drawing</AssemblyReference>
       <AssemblyReference>System.Linq</AssemblyReference>
       <AssemblyReference>System.Memory</AssemblyReference>
@@ -64,14 +65,9 @@
       <AssemblyReference>System.Private.Uri</AssemblyReference>
       <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
       <AssemblyReference>System.Security.Permissions</AssemblyReference>
-      <AssemblyReference>System.ServiceModel</AssemblyReference>
-      <AssemblyReference>System.ValueTuple</AssemblyReference>
-      <AssemblyReference>System.Windows.Forms</AssemblyReference>
       <AssemblyReference>System.Xaml</AssemblyReference>
       <AssemblyReference>System.Xml</AssemblyReference>
       <AssemblyReference>System.Xml.Linq</AssemblyReference>
-      <AssemblyReference>UiPath.Excel</AssemblyReference>
-      <AssemblyReference>UiPath.OCR.Activities.Design</AssemblyReference>
       <AssemblyReference>UiPath.System.Activities</AssemblyReference>
       <AssemblyReference>UiPath.System.Activities.Design</AssemblyReference>
       <AssemblyReference>UiPath.UiAutomation.Activities</AssemblyReference>
@@ -80,14 +76,91 @@
       <AssemblyReference>WindowsBase</AssemblyReference>
     </scg:List>
   </TextExpression.ReferencesForImplementation>
-  <Sequence sap2010:Annotation.AnnotationText="Invoke major steps of the business process, which are usually implemented by multiple subworkflows.&#xA;&#xA;If a BusinessRuleException is thrown, the transaction is skipped. &#xA;If another kind of exception occurs, the current transaction can be retried. " DisplayName="Process" sap:VirtualizedContainerService.HintSize="375.2,389.6" sap2010:WorkflowViewState.IdRef="Sequence_1">
+  <Sequence sap2010:Annotation.AnnotationText="DISPATCHER PROCESS&#xA;&#xA;Responsibility: Retrieve items from the source system and add them to the Orchestrator queue for the Performer to process.&#xA;&#xA;Steps:&#xA;1. Get source data (implement GetSourceData.xaml or inline here)&#xA;2. For each source item, call Add Queue Item&#xA;3. Log summary&#xA;&#xA;Throw BusinessRuleException if an item should be skipped (bad data, duplicate, etc.).&#xA;Throw any other exception if a system error occurs — the REF will handle retry." DisplayName="Process (Dispatcher)" sap:VirtualizedContainerService.HintSize="860,1150" sap2010:WorkflowViewState.IdRef="Sequence_1">
+    <Sequence.Variables>
+      <Variable x:TypeArguments="sd:DataTable" Name="dt_SourceData" />
+      <Variable x:TypeArguments="x:Int32" Name="int_QueuedCount" Default="[0]" />
+    </Sequence.Variables>
     <sap:WorkflowViewStateService.ViewState>
       <scg:Dictionary x:TypeArguments="x:String, x:Object">
         <x:Boolean x:Key="IsExpanded">True</x:Boolean>
         <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
       </scg:Dictionary>
     </sap:WorkflowViewStateService.ViewState>
-    <ui:LogMessage DisplayName="Log Message Process Start" sap:VirtualizedContainerService.HintSize="333.6,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;Started Process&quot;]" />
-    <ui:Comment DisplayName="Comment (placeholder)" sap:VirtualizedContainerService.HintSize="333.6,56" sap2010:WorkflowViewState.IdRef="Comment_1" Text="//  Invoke steps of the process" />
+    <ui:LogMessage DisplayName="Log Dispatcher Process Start" sap:VirtualizedContainerService.HintSize="700,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_1" Level="Info" Message="[&quot;[Dispatcher] Starting dispatch process. Queue: &quot; + in_Config(&quot;OrchestratorQueueName&quot;).ToString]" />
+    <Sequence sap2010:Annotation.AnnotationText="TODO: Replace this placeholder with the actual source data retrieval.&#xA;Examples:&#xA;  - Read Excel / CSV file (use in_Config(&quot;SourceDataPath&quot;))&#xA;  - Query a database&#xA;  - Fetch from REST API / email mailbox&#xA;Output: dt_SourceData populated with items to dispatch." DisplayName="[TODO] Get Source Data" sap:VirtualizedContainerService.HintSize="700,300" sap2010:WorkflowViewState.IdRef="Sequence_GetSource">
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          <x:Boolean x:Key="IsAnnotationDocked">True</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+      <ui:LogMessage DisplayName="Log Get Source Data" sap:VirtualizedContainerService.HintSize="660,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_2" Level="Info" Message="[&quot;[Dispatcher] Retrieving source data from: &quot; + in_Config(&quot;SourceDataPath&quot;).ToString]" />
+      <ui:Comment DisplayName="TODO: Implement source data retrieval" sap:VirtualizedContainerService.HintSize="660,56" sap2010:WorkflowViewState.IdRef="Comment_GetSource" Text="Invoke GetSourceData.xaml or add source retrieval activities here. Populate dt_SourceData." />
+    </Sequence>
+    <If sap2010:Annotation.AnnotationText="Guard: skip dispatch if no source data was found. Throws BusinessRuleException so the REF marks this transaction as a business exception (skipped), not a failure." Condition="[dt_SourceData Is Nothing OrElse dt_SourceData.Rows.Count = 0]" DisplayName="If no source data found" sap:VirtualizedContainerService.HintSize="700,200" sap2010:WorkflowViewState.IdRef="If_NoData">
+      <If.Then>
+        <Throw DisplayName="Throw - No source data" Exception="[New UiPath.Core.BusinessRuleException(&quot;[Dispatcher] No source data found. Verify the source path and credentials.&quot;)]" sap:VirtualizedContainerService.HintSize="660,113.6" sap2010:WorkflowViewState.IdRef="Throw_NoData" />
+      </If.Then>
+    </If>
+    <ui:ForEachRow sap2010:Annotation.AnnotationText="Iterate over each source row and add it as a queue item to Orchestrator.&#xA;Customise the SpecificContent dictionary to include all fields the Performer needs." ColumnNames="{x:Null}" CurrentIndex="{x:Null}" DataTable="[dt_SourceData]" DisplayName="For Each Source Row - Add Queue Item" sap:VirtualizedContainerService.HintSize="700,500" sap2010:WorkflowViewState.IdRef="ForEachRow_Dispatch">
+      <ui:ForEachRow.Body>
+        <ActivityAction x:TypeArguments="sd:DataRow">
+          <ActivityAction.Argument>
+            <DelegateInArgument x:TypeArguments="sd:DataRow" Name="SourceRow" />
+          </ActivityAction.Argument>
+          <Sequence DisplayName="Add Item to Queue" sap:VirtualizedContainerService.HintSize="660,380" sap2010:WorkflowViewState.IdRef="Sequence_AddItem">
+            <Sequence.Variables>
+              <Variable x:TypeArguments="scg:Dictionary(x:String, x:Object)" Name="dict_SpecificContent" />
+            </Sequence.Variables>
+            <sap:WorkflowViewStateService.ViewState>
+              <scg:Dictionary x:TypeArguments="x:String, x:Object">
+                <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+              </scg:Dictionary>
+            </sap:WorkflowViewStateService.ViewState>
+            <Assign DisplayName="Build SpecificContent dictionary" sap:VirtualizedContainerService.HintSize="620,113.6" sap2010:WorkflowViewState.IdRef="Assign_SpecificContent">
+              <Assign.To>
+                <OutArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[dict_SpecificContent]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="scg:Dictionary(x:String, x:Object)">[New Dictionary(Of String, Object) From {{"RowIndex", SourceRow.Table.Rows.IndexOf(SourceRow).ToString}}]</InArgument>
+              </Assign.Value>
+            </Assign>
+            <ui:Comment DisplayName="TODO: Add domain-specific fields to SpecificContent" sap:VirtualizedContainerService.HintSize="620,56" sap2010:WorkflowViewState.IdRef="Comment_Fields" Text="e.g.: dict_SpecificContent(&quot;InvoiceNumber&quot;) = SourceRow(&quot;InvoiceNo&quot;).ToString" />
+            <ui:AddQueueItem ContinueOnError="{x:Null}" DisplayName="Add Queue Item" sap:VirtualizedContainerService.HintSize="620,120" sap2010:WorkflowViewState.IdRef="AddQueueItem_1" QueueName="[in_Config(&quot;OrchestratorQueueName&quot;).ToString]" FolderPath="[in_Config(&quot;OrchestratorQueueFolder&quot;).ToString]" ItemInformation="[dict_SpecificContent]">
+              <ui:AddQueueItem.Deadline>
+                <InArgument x:TypeArguments="s:Nullable(s:DateTime)" />
+              </ui:AddQueueItem.Deadline>
+              <ui:AddQueueItem.PostponeFor>
+                <InArgument x:TypeArguments="s:Nullable(s:DateTime)" />
+              </ui:AddQueueItem.PostponeFor>
+            </ui:AddQueueItem>
+            <Assign DisplayName="Increment queued counter" sap:VirtualizedContainerService.HintSize="620,104.8" sap2010:WorkflowViewState.IdRef="Assign_Counter">
+              <Assign.To>
+                <OutArgument x:TypeArguments="x:Int32">[int_QueuedCount]</OutArgument>
+              </Assign.To>
+              <Assign.Value>
+                <InArgument x:TypeArguments="x:Int32">[int_QueuedCount + 1]</InArgument>
+              </Assign.Value>
+            </Assign>
+          </Sequence>
+        </ActivityAction>
+      </ui:ForEachRow.Body>
+      <sap:WorkflowViewStateService.ViewState>
+        <scg:Dictionary x:TypeArguments="x:String, x:Object">
+          <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          <x:Boolean x:Key="IsPinned">False</x:Boolean>
+        </scg:Dictionary>
+      </sap:WorkflowViewStateService.ViewState>
+    </ui:ForEachRow>
+    <Assign DisplayName="Assign out_ItemsQueued" sap:VirtualizedContainerService.HintSize="700,104.8" sap2010:WorkflowViewState.IdRef="Assign_Out">
+      <Assign.To>
+        <OutArgument x:TypeArguments="x:Int32">[out_ItemsQueued]</OutArgument>
+      </Assign.To>
+      <Assign.Value>
+        <InArgument x:TypeArguments="x:Int32">[int_QueuedCount]</InArgument>
+      </Assign.Value>
+    </Assign>
+    <ui:LogMessage DisplayName="Log Dispatcher Process End" sap:VirtualizedContainerService.HintSize="700,92.8" sap2010:WorkflowViewState.IdRef="LogMessage_End" Level="Info" Message="[&quot;[Dispatcher] Dispatch complete. Items queued: &quot; + int_QueuedCount.ToString + &quot; / &quot; + dt_SourceData.Rows.Count.ToString]" />
   </Sequence>
 </Activity>
